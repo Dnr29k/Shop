@@ -1,0 +1,45 @@
+let panier = [];
+
+function ajouterAuPanier(produit, prix) {
+  panier.push({ produit, prix });
+  afficherPanier();
+}
+
+function afficherPanier() {
+  const liste = document.getElementById("liste-panier");
+  const total = document.getElementById("total");
+  liste.innerHTML = "";
+  let somme = 0;
+
+  panier.forEach((item, index) => {
+    const li = document.createElement("li");
+    li.textContent = `${item.produit} - ${item.prix}€`;
+    liste.appendChild(li);
+    somme += item.prix;
+  });
+
+  total.textContent = "Total : " + somme + "€";
+}
+
+paypal.Buttons({
+  createOrder: function(data, actions) {
+    let somme = panier.reduce((total, item) => total + item.prix, 0);
+    return actions.order.create({
+      purchase_units: [{
+        amount: {
+          value: somme.toString()
+        },
+        payee: {
+          email_address: "dnr.29k@gmail.com"
+        }
+      }]
+    });
+  },
+  onApprove: function(data, actions) {
+    return actions.order.capture().then(function(details) {
+      alert("Paiement effectué avec succès par " + details.payer.name.given_name + " !");
+      panier = [];
+      afficherPanier();
+    });
+  }
+}).render('#paypal-button-container');
